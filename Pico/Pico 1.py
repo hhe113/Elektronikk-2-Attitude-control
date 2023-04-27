@@ -78,5 +78,5 @@ while True:
     
     # Print the accelerometer data
     print("Accelerometer: X={:.2f}m/s², Y={:.2f}m/s², Z={:.2f}m/s²".format(acc_x, acc_y, acc_z))
-    time.sleep(0.1)
+    time.sleep_ms(100)
 
