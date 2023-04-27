@@ -1,11 +1,9 @@
-# Denne koden leser av og printer verdien av accelerometeren på IMU modulen +-2g 
-# Det er bare å kopiere inn i Thonny og kjøre den. Den funker på Pico w, usikker om den kjører på vanlig Pico
-
 import machine
 import time
-import network
+import network   # handles connecting to WiFi
+import urequests # handles making and servicing network requests
 import socket
-import urequests
+
 
 # Define the I2C bus
 sdaPIN=machine.Pin(4)
@@ -53,12 +51,27 @@ i2c.writeto_mem(imu_addr,127,b'\x00')
 
 time.sleep(1)
 
-# Continuously read and print accelerometer data
-while True:    
+
+# Connect to network
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+
+# Fill in your network name (ssid) and password here:
+ssid = 'sew-TUF-GAMING-FX504GD-FX80GD'
+password = '9B0Mq5Gq'
+wlan.connect(ssid, password)
+
+
+print(wlan.status())
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+s.connect(('10.42.0.1', 9876))
+
+while True:
+    
     # Read 6 bytes of accelerometer data from the module's data registers
     acc_raw = i2c.readfrom_mem(imu_addr, 0x2d, 6)
-
-    #print(acc_raw)
     
     # Convert the raw data to signed 16-bit values and scale by the appropriate range
     acc_x = (acc_raw[0] << 8) | acc_raw[1]
@@ -75,8 +88,8 @@ while True:
     if acc_z > 32767:
         acc_z -= 65536
     acc_z = acc_z / 1670.0
-    
-    # Print the accelerometer data
-    print("Accelerometer: X={:.2f}m/s², Y={:.2f}m/s², Z={:.2f}m/s²".format(acc_x, acc_y, acc_z))
-    time.sleep(0.1)
 
+
+    s.send(b'%.2f,%.2f,%.2f' % (acc_x, acc_y, acc_z))
+    time.sleep(0.1)
+    
